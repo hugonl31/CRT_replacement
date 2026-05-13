@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Why Replacing a CRT Is Still One of Display Engineering’s Hardest Problems</title>
+  <style>
+    :root {
+      --bg: #141414;
+      --text: #E8E8E8;
+      --amber: #FFB347;
+      --muted: #BDBDBD;
+      --panel: #1E1E1E;
+      --link: #FFD08A;
+    }
+    html {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 18px;
+      line-height: 1.68;
+    }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at top left, rgba(255,179,71,.08), transparent 32rem),
+        var(--bg);
+    }
+    main {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 4rem 1.35rem 5rem;
+    }
+    h1 {
+      color: #fff;
+      font-size: clamp(2.2rem, 6vw, 4.7rem);
+      line-height: .98;
+      letter-spacing: -0.055em;
+      margin: 0 0 2rem;
+      text-wrap: balance;
+    }
+    h2 {
+      color: var(--amber);
+      font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+      line-height: 1.18;
+      margin: 3.1rem 0 1rem;
+      letter-spacing: -0.02em;
+    }
+    p {
+      margin: 0 0 1.1rem;
+    }
+    .highlight {
+      font-style: italic;
+      color: var(--text);
+      margin: 1.35rem 0 1.55rem;
+      padding-left: 1rem;
+    }
+    blockquote {
+      margin: 2rem 0;
+      padding: 1.1rem 1.25rem 1.1rem 1.4rem;
+      background: var(--panel);
+      border-left: 4px solid var(--amber);
+      border-radius: 10px;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: 0 0 0 1px rgba(255,179,71,.25);
+    }
+    a {
+      color: var(--link);
+      text-decoration-thickness: .08em;
+      text-underline-offset: .18em;
+    }
+    .sources {
+      margin-top: 4rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,.12);
+      color: var(--muted);
+      font-size: .72rem;
+      line-height: 1.45;
+      font-style: italic;
+    }
+    .sources h2 {
+      font-size: .85rem;
+      margin: 0 0 .55rem;
+      color: var(--muted);
+      font-style: italic;
+      letter-spacing: normal;
+    }
+    .sources ol {
+      margin: 0;
+      padding-left: 1.25rem;
+    }
+    .sources li {
+      margin: .25rem 0;
+    }
+    @media (max-width: 640px) {
+      html { font-size: 16px; }
+      main { padding-top: 2.3rem; }
+    }
+    @media print {
+      html, body {
+        background: #141414 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      main { max-width: none; }
+      a { color: var(--link); }
+    }
+  </style>
+</head>
+<body>
+<main>
+<h1>Why Replacing a CRT Is Still One of Display Engineering’s Hardest Problems</h1>
+<p>The CRT refuses to die for a simple reason: it was never just a screen.</p>
+<p>It was a timing system, a light-emission system, a motion-clarity system, an analog signal chain, and a curved glass object fused into one heavy vacuum tube. Modern displays beat CRTs in obvious ways: resolution, HDR, size, weight, sharpness, geometry, power use, and convenience. That argument is over.</p>
+<p>But if the target is the specific way a CRT behaves — the rolling scan, the phosphor decay, the flexible sync, the low signal-to-light latency, the lack of a fixed pixel grid, the bloom, the mask structure, the curved glass, and the living quality of the image — then the problem becomes much harder.</p>
+<p>There are three different goals people often collapse into one.</p>
+<p>First, a CRT-style image: scanlines, masks, glow, curvature, and color behavior.</p>
+<p>Second, CRT-like motion clarity: low persistence, rolling illumination, and less sample-and-hold blur.</p>
+<p>Third, true CRT equivalence: matching the spatial, temporal, optical, and analog behavior closely enough that the digital display stops feeling like a simulation.</p>
+<p class="highlight"><em>The first goal is already possible. The second is becoming realistic. The third is still brutal.</em></p>
+<h2>1. Why Flat Panels Blur Motion Differently</h2>
+<p>The core problem is not only pixel response time. That is the trap.</p>
+<p>OLED pixels can switch extremely quickly. High-end LCDs have also become much faster than they used to be. But most modern flat panels are still sample-and-hold displays: they draw a frame, then hold that frame visible until the next refresh.</p>
+<p>That sounds harmless until your eyes start tracking motion. When an object moves across the screen, your eyes smoothly follow it. But the display is holding each frame in place for a fixed interval. Your retina tracks across that held image, and the result is perceived motion blur. Blur Busters makes this point directly: even an OLED with effectively instant pixel response can still show motion blur because of sample-and-hold persistence.</p>
+<p>The numbers are simple.</p>
+<p>At 60 Hz, one frame lasts 16.7 ms.  <br>At 120 Hz, one frame lasts 8.3 ms.  <br>At 240 Hz, one frame lasts 4.17 ms.  <br>At 480 Hz, one frame lasts 2.08 ms.  <br>At 960 Hz, one frame lasts 1.04 ms.</p>
+<p class="highlight"><em>OLED solved much of the pixel-transition problem. It did not automatically solve the persistence problem.</em></p>
+<p>A CRT behaves differently. It does not hold the whole frame on-screen at full brightness. An electron beam scans across the phosphor surface, lighting only a small part of the image at a time. The phosphor rises, glows, and decays. The result is a naturally low-persistence image: each part of the frame is only bright for a short period.</p>
+<p>That rolling, decaying light pattern is a major reason CRT motion can look so clean even at refresh rates that seem unimpressive on paper.</p>
+<h2>2. The Software Trick: Simulating the Beam</h2>
+<p>The interesting modern CRT simulation work is not just cosmetic. It is temporal.</p>
+<p>A basic CRT shader draws scanlines, masks, curvature, and glow. That can look nice, but it does not fully attack the motion problem. The more important trick is refresh-cycle simulation: dividing a high-refresh display into subframes and creating a rolling band of illumination, with a decay trail behind it.</p>
+<p>Blur Busters’ recent ShaderBeam work is specifically about bringing CRT-like rolling-scan and phosphor-fade motion clarity to high-refresh LCD and OLED monitors through a shader overlay, with best results recommended on 240 Hz and above OLED displays.</p>
+<p>This matters because rolling illumination is closer to CRT behavior than ordinary black-frame insertion. Basic BFI improves motion clarity by reducing persistence, but it often costs brightness and can create harsh flicker. A simulated beam can distribute that low-persistence behavior more gracefully: less like the whole screen blinking, more like a moving light source.</p>
+<p class="highlight"><em>The goal is not just “add scanlines.” The goal is to make the flat panel stop behaving like a held photograph and start behaving more like a raster display.</em></p>
+<h2>3. The Brightness Problem: Low Persistence Is Expensive</h2>
+<p>Low persistence is not free. If a display only lights a pixel or region for a short fraction of each frame, it has less time to deliver light.</p>
+<p>A normal 60 Hz sample-and-hold display can leave a frame visible for 16.7 ms. A CRT-like impulse display may light a given region for something closer to 1–2 ms. That is the whole trick: less visible time means less retinal smear.</p>
+<p>But the brightness has to come from somewhere.</p>
+<p>A CRT solves this naturally. The beam hits phosphor with a short, intense burst. The phosphor glows, then decays. Short visible duration, not just fast pixel transition, is what reduces eye-tracking blur.</p>
+<p>OLED has a harder job. It can turn pixels on and off quickly, but if a CRT simulator only lights a rolling band for a small slice of the frame, average brightness drops. To compensate, the OLED must drive the illuminated region much harder during the short “on” period. That creates thermal, power, automatic-brightness-limiter, aging, and burn-in constraints.</p>
+<p>This is why microLED is such an attractive long-term candidate. It is self-emissive like OLED, but in principle it can offer much higher peak brightness and avoid organic-emitter aging.</p>
+<p>The likely endgame for a no-compromise digital CRT is probably not ordinary OLED. It is either an unusually bright, high-refresh OLED with careful duty-cycle management, or a future microLED-class emissive panel with enough peak-brightness headroom to survive aggressive rolling-scan operation.</p>
+<h2>4. Black Level: OLED Wins the Measurement, CRT Wins the Texture</h2>
+<p>OLED has the cleaner black-level argument. A black OLED pixel can simply be off. In a dark room, that gives OLED a level of full-screen black cleanliness that a CRT usually cannot match perfectly.</p>
+<p>A CRT has no LCD-style backlight, so its blacks can be excellent. But it still has a glass faceplate, phosphor surface, possible raster glow, internal reflections, beam setup limits, and room reflections. Its black is not mathematically perfect.</p>
+<p>The reason CRT black still feels special is not that it beats OLED at zero luminance. It is the way light rises out of black. Bright objects bloom slightly. Scanlines have physical darkness between them. The mask or aperture grille interacts with the beam. The edge of a highlight is not just a pixel boundary; it is a small optical event.</p>
+<p>OLED gives the better black floor. CRT gives the more organic black-to-light transition.</p>
+<h2>5. Signal-to-Light Latency: Why CRTs Feel Immediate</h2>
+<p>A CRT is not literally zero latency if you measure the whole screen. At 60 Hz, the beam still needs 16.7 ms to scan from the top of the frame to the bottom. The center of the image is reached after about 8.3 ms. The bottom is reached near 16.7 ms.</p>
+<p>That is scanout timing, not digital processing delay.</p>
+<p>The CRT advantage is that there is almost no mandatory frame-buffer stage between the incoming analog signal and light emission. The video signal modulates the beam as it scans. When the beam reaches a given point on the phosphor, that point lights very quickly, then decays.</p>
+<p>A high-end OLED monitor can be extremely fast, but it still lives inside a digital chain: frame delivery, display controller, timing logic, optional scaling, color processing, HDR behavior, VRR behavior, and pixel driving. The best modern monitors have pushed this overhead very low, but the architecture is still different.</p>
+<p>At 240 Hz, the theoretical center-screen scanout interval is about 2.09 ms. At 360 Hz, it is about 1.39 ms. At 480 Hz, it is about 1.04 ms. At a hypothetical 960 Hz, it would be about 0.52 ms.</p>
+<p>That means a future 960 Hz OLED could beat a 60 Hz CRT in center-screen scanout timing. But it would still be doing so through a digital pipeline. The CRT’s advantage is not magic. It is the brutal directness of analog beam modulation.</p>
+<h2>6. The Hidden Superpower: CRTs Bend Around the Signal</h2>
+<p>One of the least appreciated CRT advantages is sync flexibility.</p>
+<p>A CRT does not have a native pixel grid. It has timing ranges. If the incoming signal is within the horizontal and vertical sync limits of the chassis, the display can often lock onto it and draw it directly.</p>
+<p>That is why analog CRT displays can handle strange resolutions, odd refresh rates, 240p, 480i, 50 Hz PAL, 59.94 Hz NTSC, and many computer or arcade timings without needing to scale everything into a fixed native panel format.</p>
+<p>This is not just a resolution advantage. It is a motion advantage.</p>
+<p>Old consoles and arcade boards often did not output perfect modern 60.000 Hz. NTSC-derived systems commonly live around 59.94 Hz. Some arcade boards use unusual refresh rates. A CRT can lock to the source’s actual rhythm. The game produces frames, the video signal carries that timing, and the CRT scans it. Smooth scrolling stays smooth because the display is following the machine instead of forcing the machine into a standardized panel cadence.</p>
+<p>A fixed-refresh flat panel is less forgiving. If a game runs at 59.82 Hz and the monitor wants 60.00 Hz, something has to give. The emulator can duplicate a frame, drop a frame, tear, buffer, resample audio, slightly speed up the game, slightly slow it down, or use VRR if the display supports it. Every option is a compromise unless the whole chain can follow the source exactly.</p>
+<p>VRR helps, but it is not full CRT freedom. A future 960 Hz OLED would improve the situation dramatically because the timing grid becomes much denser. A 60 Hz frame gets sixteen 960 Hz slots. A 59.94 Hz signal can be approximated far more finely than on a 60 Hz or 120 Hz panel.</p>
+<p>But “easier to hide” is not the same as native analog lock.</p>
+<p class="highlight"><em>The perfect digital CRT is not merely a 12K OLED with a shader. It is a display that behaves less like a fixed panel and more like a programmable raster machine.</em></p>
+<h2>7. Raster Timing: The Frame Is Not Always Finished</h2>
+<p>Modern displays encourage us to think of video as finished frames. The GPU renders a frame, the display receives it, and the panel shows it.</p>
+<p>CRT-era systems often worked differently. The image could be modified while it was being drawn. Consoles, computers, and arcade boards could change scroll registers, palettes, sprites, or display modes mid-frame. This created raster effects: split-screen status bars, wavy water, parallax tricks, mid-screen color gradients, and other effects synchronized to the beam.</p>
+<p>The CRT did not need to understand any of this. It simply followed the signal. If the console changed something halfway down the screen, the beam drew the new behavior from that point onward.</p>
+<p>This is another reason “just scale it to 4K” misses the point. A perfect digital CRT replacement should not only display completed frames. It should preserve raster timing: the ability for source hardware or an emulator to update the video state as the scan progresses.</p>
+<p>Emulators can simulate this, but the display pipeline must cooperate. The ideal future display would support beam-raced output, scanline-addressable updates, extremely low-latency rolling presentation, and arbitrary source timing.</p>
+<p>Without that, the system is still converting a living raster process into buffered digital frames.</p>
+<h2>8. Phosphor Decay: The Beautiful Imperfection</h2>
+<p>CRT motion is not perfectly discrete. A point on the screen does not simply turn on and vanish. The beam excites phosphor, the phosphor glows, and then it decays.</p>
+<p>This decay can make motion feel less sterile. A scrolling background on a CRT often has a soft temporal continuity: not sample-and-hold blur, but a short luminous afterimage. It is part of why CRT motion can feel both sharp and fluid at the same time.</p>
+<p>This is not “more accurate” in a universal sense. It is a specific display behavior. Short-persistence phosphors reduce blur but can look dimmer or flickerier. Longer-persistence phosphors look smoother and brighter but can smear or ghost.</p>
+<p>Shaders can emulate phosphor decay. They can add rolling light, afterglow, halation, mask glow, and brightness-dependent trails. But real phosphor decay is not just a post-processing effect. It is the material response of the screen.</p>
+<p>That difference matters. A shader can draw a glow. A CRT physically glows.</p>
+<h2>9. Bloom, Masks, Glass, and Curvature</h2>
+<p>A CRT image is not perfectly stable at the pixel level because there are no pixels in the flat-panel sense. There is a beam, a mask or grille, phosphor, analog drive circuitry, and glass.</p>
+<p>Bright areas can bloom. Thin white lines can become slightly thicker. Saturated colors can bleed into neighboring phosphor structure. The beam spot can change with brightness. The image can shift subtly with load, temperature, or geometry. None of this is “accurate” by modern display-measurement standards. But it is part of the CRT look.</p>
+<p>Curved glass belongs in that same category. It should not be treated as a minor nostalgia filter.</p>
+<p>A CRT picture is not printed on a flat surface. It appears through thick glass, on a phosphor layer behind a curved faceplate, with reflections, optical depth, and a physical luminous surface. In 2D scrollers, that can make the world feel like it is moving across a real object rather than sliding over a flat digital sheet. In early 3D games, the convex face and glass depth can make the image feel slightly more dimensional, as if the render is sitting inside a small glowing window.</p>
+<p>That is subjective, but it is not imaginary. The optics are different.</p>
+<p>For a full CRT simulation, curved glass deserves to sit next to scanlines, bloom, masks, and phosphor decay as one of the aesthetic pillars. The problem is that it is very hard to reproduce correctly.</p>
+<p>A shader can warp the image. It can bend the corners, simulate barrel distortion, add reflections, darken the edges, and fake a glass highlight. That can look convincing in screenshots.</p>
+<p>But a real CRT curve is not just image warping. It is a double-curved glass object with thickness, refraction, surface reflection, phosphor depth, and brightness-dependent bloom happening behind the glass. A normal curved OLED monitor is usually curved along one axis and still fundamentally behaves like a flat pixel matrix. A CRT face is a different optical object.</p>
+<p>To reproduce that physically, a manufacturer would need a small, high-density, high-refresh, probably 4:3 emissive panel with a double-curved substrate or a custom optical stack that behaves like thick CRT glass. That is almost the opposite of today’s panel economics.</p>
+<p class="highlight"><em>The digital shortcut will get better. But if the goal is the full CRT feeling, the glass is not optional decoration. It is part of the instrument.</em></p>
+<h2>10. Games Were Authored for This Display Stack</h2>
+<p>CRTs were not neutral output devices. Their gamma, phosphor colors, scanlines, masks, composite artifacts, analog softness, and motion behavior shaped how games were authored.</p>
+<p>Pixel art was not drawn for razor-sharp OLED pixels. It was drawn for glowing phosphor, analog blending, dark scanline gaps, and the way neighboring colors mixed on real displays. Dithering could become transparency. Checkerboards could become gradients. Harsh stair-steps could soften into curves. Composite artifacts could become color. The CRT was not just the output device; it was part of the renderer.</p>
+<p>This is why modern flat panels can be more accurate to the data while being less accurate to the intended experience.</p>
+<p>The raw pixels are not always the artwork. Sometimes the artwork is the interaction between the pixels and the display that was expected to show them.</p>
+<p>A good CRT shader can recover much of this: bloom, halation, mask structure, beam width, convergence error, chroma bleed, scanline thickness, phosphor decay, and curvature. But the better the shader gets, the more it needs resolution, brightness, timing, and artistic judgment.</p>
+<p>“CRT filter” is not enough. The final digital CRT needs display engineering and shader authorship.</p>
+<h2>11. The Unreasonable Target: True Digital CRT Equivalence</h2>
+<p>A convincing CRT-like display is one thing. A physically faithful digital CRT replacement is another.</p>
+<p>To simulate a CRT with no visible temporal shortcut, the panel would need to represent the scan process at something close to line-level timing. A standard 15 kHz SD CRT scans about 15,750 horizontal lines per second. In a digital system, matching that behavior literally would mean giving the display enough temporal addressability to update the image at scanline-like intervals, not merely once per finished frame.</p>
+<p>That is where the numbers become absurd.</p>
+<p>A 12K image at 11,520 × 6,480 contains about 74.6 million pixels. If we wanted to update that image at 15,750 temporal slices per second, that is about 1.18 trillion pixel updates per second.</p>
+<p>At roughly 30 bits per pixel, before blanking, metadata, encoding overhead, or safety margin, that is about 35.3 Tbps of raw image data.</p>
+<p>DisplayPort 2.1 UHBR20 is 80 Gbps over four lanes. That makes the hypothetical full-fat 12K/15.75 kHz CRT simulator roughly 441 times beyond today’s top raw DisplayPort link.</p>
+<p>The rendering problem is worse. 4K at 60 Hz is about 498 million pixels per second. 4K at 240 Hz is about 1.99 billion pixels per second. The 12K/15,750 Hz target is about 1.18 trillion pixels per second. That is roughly 590 times the pixel rate of 4K/240 and roughly 2,360 times the pixel rate of 4K/60.</p>
+<p>That does not mean a GPU must be exactly 590× or 2,360× faster in every way. Rendering engines use reconstruction, culling, compression, temporal reuse, and many tricks. But if the target is brute-force native rendering plus a high-quality CRT simulation shader, the order of magnitude is clear: this is not one or two GPU generations away.</p>
+<p>This is a 2040s-class problem, maybe later, if the goal is full physical equivalence rather than a convincing approximation.</p>
+<p class="highlight"><em>2045 is not a prophecy. It is a useful warning label.</em></p>
+<h2>12. The Realistic Target: 960 Hz CRT-Like Motion</h2>
+<p>The practical path is not 15,750 Hz. It is smarter temporal approximation.</p>
+<p>A 960 Hz panel is interesting because it gives sixteen temporal slots for every 60 Hz frame. At 240 Hz, a 60 Hz frame only gets four slots. At 480 Hz, it gets eight. At 960 Hz, it gets sixteen.</p>
+<p>That is enough for a rolling-beam shader to become much less crude. The simulated beam can illuminate the top of the image, then the next band, then the next, with a decay trail behind it. The fake beam gets enough temporal resolution to move like a beam instead of like a stack of obvious bands.</p>
+<p>The persistence number also becomes interesting. One 960 Hz interval is 1.04 ms. That is close to the 1–2 ms phosphor-decay territory associated with some CRT examples. It does not mean physical CRT equivalence, but it means a flat panel can begin to operate in the same perceptual timing range.</p>
+<p>A 4K version of this is already heavy. 4K at 960 Hz and 30 bits per pixel is about 239 Gbps raw before overhead. That is about three times DisplayPort 2.1 UHBR20’s raw 80 Gbps link rate.</p>
+<p>A 12K version is much worse. 12K at 960 Hz and 30 bits per pixel is about 2.15 Tbps raw before overhead. That is about 27 times DisplayPort 2.1 UHBR20.</p>
+<p>So the realistic digital CRT path still needs compression, multiple links, display-side processing, reconstruction, or future interfaces. But it is at least in the category of an extreme display-engineering roadmap, not pure science fiction.</p>
+<p>A native 4K or 8K high-refresh OLED may become the first widely convincing route. A 12K 960 Hz microLED would be the luxury version: enough spatial density for masks and glow, enough temporal resolution for rolling persistence, enough brightness for short-duty-cycle illumination, and enough self-emissive contrast to keep the black parts dead.</p>
+<h2>13. Why the Final Digital CRT May Be MicroLED, Not OLED</h2>
+<p>OLED is the obvious near-term candidate because it is self-emissive, fast, high-contrast, and already shipping in high-refresh gaming monitors.</p>
+<p>But OLED has a weakness for CRT simulation: low-persistence operation demands high peak brightness in short bursts, and OLED brightness is constrained by heat, power, automatic brightness limiting, and long-term emitter wear.</p>
+<p>MicroLED is theoretically better suited. It is self-emissive like OLED, but it can potentially drive much higher peak brightness and avoid organic-emitter burn-in. It could give the CRT simulator the thing OLED struggles with most: brutal light output during short duty cycles.</p>
+<p>The problem is manufacturing. A 12K desktop-sized microLED would require an absurd number of tiny, uniform, individually controlled emitters packed at very high density. Large luxury microLED TVs are one thing. A 28-inch 12K 960 Hz microLED monitor is another.</p>
+<p>The likely path is therefore simple.</p>
+<p>OLED first for convincing CRT-like motion.</p>
+<p>MicroLED later for no-compromise brightness, persistence, longevity, and HDR headroom.</p>
+<h2>14. The Cost Joke: Rebuilding a Free Television</h2>
+<p>The funniest part of the digital CRT quest is not that the technology is impossible. It is that the technology may eventually be possible only by becoming absurd.</p>
+<p>The cheap path still exists today.</p>
+<p>Not always, not everywhere, and not for long. But it exists.</p>
+<p>A good consumer CRT can still appear locally for free because someone wants the heavy thing gone. A decent living-room set from Sony, JVC, Panasonic, Philips, Toshiba, Samsung, or another serious consumer brand can still sometimes be found for €0–€100 if you are patient and willing to collect it yourself. The nicest examples are already rising, but the basic fact remains: the display itself can still be almost free.</p>
+<p>Then feed it a real analog source.</p>
+<p>A NES, SNES, Mega Drive, PlayStation, or similar original console can still often be found for a few tens of euros, or at least under €100 depending on condition and region. Add cables, maybe a controller, and you can still be up and running with a real console and a real CRT for under €100 if luck is on your side.</p>
+<p>If you want broader coverage, use an FPGA setup with analog output. That can give you native timing and an analog signal straight into the CRT while covering far more systems. A curbside CRT plus an FPGA source can still put the “plays almost everything correctly on a real tube” route somewhere below roughly €300 in many cases.</p>
+<p>That is the baseline:</p>
+<p>A free-to-cheap consumer CRT.  <br>A real console or FPGA analog source.  <br>Native timing.  <br>The tube locking directly to the signal.  <br>No scaler.  <br>No frame buffer.  <br>No operating-system compositor.  <br>No 12K panel.  <br>No 960 Hz rolling-beam shader.  <br>No terabit display link.  <br>No GPU trying to impersonate phosphor.</p>
+<p>That is the humiliating comparison.</p>
+<p>For under €100 with luck, or under €300 for a much broader FPGA-based setup, you can still get the actual behavior the future digital version is trying to reconstruct: analog timing, low persistence, flexible sync, raster behavior, phosphor decay, scanlines, bloom, glass, and a real curved tube.</p>
+<p>Professional monitors are the trap door in this conversation.</p>
+<p>PVMs and BVMs are beautiful machines. They are sharp, stable, controllable, and built for professional signal monitoring. A good one can make 240p look almost surgical: clean scanlines, tight geometry, excellent color, and very little ambiguity about what the signal contains.</p>
+<p>But that does not automatically make them the final form of the CRT experience.</p>
+<p>Their modern prices are now shaped as much by scarcity, collecting, and prestige as by practical improvement. A PVM may be technically better than a normal television, but “technically better” is not always the same as “more authentic.” Most 8-bit and 16-bit home games were not authored for a pristine broadcast monitor. They were drawn, tested, sold, and played in the world of living-room televisions.</p>
+<p>That matters.</p>
+<p>A good consumer tube does not merely approximate the average historical experience. In many cases, it is the historical experience: softer beam, warmer bloom, visible mask structure, slight color blending, curved glass, imperfect geometry, and enough analog texture to make old pixel art behave the way it was expected to behave.</p>
+<p>The expensive professional monitor can show you the signal with brutal clarity.</p>
+<p>The good home CRT can show you the game as a living-room object.</p>
+<p>That distinction changes the whole endgame. The gold at the end of the rainbow may not be the sharpest CRT, the rarest CRT, or the most expensive CRT. It may be the best version of the ordinary tube: a healthy consumer Trinitron, JVC, Panasonic, Toshiba, Philips, or similar set with good geometry, good color, and the right inputs.</p>
+<p>That is what future digital technology is really chasing.</p>
+<p>Not the collector fantasy of owning the most perfect broadcast monitor, but the harder and more interesting target: reproducing the familiar, physical, slightly imperfect, deeply integrated display environment that made these games look complete in the first place.</p>
+<p>Now compare that with the digital route.</p>
+<p>To approximate the same experience without the tube, you need a powerful PC, accurate software emulation or FPGA output into a digital pipeline, elaborate shaders, rolling-scan presentation, high-refresh low-persistence output, enough brightness to survive short duty cycles, and a display that can make the simulation convincing.</p>
+<p>The dream version is something like a 12K 960 Hz self-emissive panel, probably microLED or a much more advanced OLED, with terabit-class bandwidth, scanline-aware display logic, flexible sync, and enough peak brightness to imitate the punch of phosphor.</p>
+<p>That is the joke.</p>
+<blockquote>To replace a free television and a cheap analog source, we may need one of the most advanced consumer displays ever built.</blockquote>
+<h2>15. The Final Irony</h2>
+<p>The CRT is both obsolete and not yet replaced.</p>
+<p>That is the uncomfortable truth.</p>
+<p>We can beat it on resolution. We can beat it on HDR. We can beat it on size, weight, power, geometry, sharpness, convenience, and reliability. But the specific CRT stack — low persistence, rolling scan, flexible sync, raster timing, phosphor decay, bloom, mask structure, curved glass, and analog immediacy — remains weirdly hard to kill.</p>
+<p>The future replacement may be a 12K 960 Hz microLED panel with terabit-class bandwidth, scanline-aware display logic, brutal peak brightness, flexible sync, and shaders tuned by people who understand that phosphor is not just “glow.”</p>
+<p>Until then, the best CRT replacement is still a CRT.</p>
+<p>That is the punchline. To replace a free curbside television driven by a cheap console or low-cost FPGA board, we may need a display system that costs more than a car.</p>
+<p>And the cheap option is not safe forever.</p>
+<p>Large-scale CRT production is effectively gone. Restarting the old ecosystem would not be like restarting vinyl records. A CRT is a vacuum tube with specialized glass, phosphor coating, electron guns, high-voltage electronics, X-ray shielding requirements, implosion safety requirements, shipping problems, and environmental compliance problems.</p>
+<p>The radiation issue is also worth phrasing correctly. CRTs are not “gamma-emitting machines.” The practical concern is X-ray radiation from high-voltage electrons decelerating inside the tube, which is why CRTs historically used shielding glass and strict high-voltage design. The environmental issue is the leaded funnel glass.</p>
+<p>That does not mean an intact CRT sitting in your room is a toxic death box. It means nobody sane is rushing to rebuild the old mass-production chain for a niche retro-gaming market.</p>
+<p class="highlight"><em>A working CRT is not just an old television. It is a surviving artifact from a dead industrial ecosystem.</em></p>
+<p>So keep the good ones alive.</p>
+<p>Not because they are perfect. They are not. They drift, buzz, age, bloom, warp, hum, soften, and fail.</p>
+<p>Keep them alive because they are the last mass-produced displays that solve this problem natively.</p>
+<p>One day, the digital replacement will be good enough. The beam will be simulated. The phosphor will be modeled. The sync will be flexible. The latency will be low. The motion will be clean. The curved glass will either be optically recreated or replaced by something convincing enough that we stop caring.</p>
+<p>Then the glass box can finally rest.</p>
+<p>But not yet.</p>
+
+<section class="sources">
+  <h2>Sources</h2>
+  <ol>
+    <li><a href="https://blurbusters.com/faq/oled-motion-blur/">Blur Busters: OLED motion blur and sample-and-hold persistence</a></li>
+<li><a href="https://www.tomshardware.com/video-games/pc-gaming/shaderbeam-provides-crt-like-motion-clarity-on-high-refresh-rate-lcd-and-oled-monitors-open-source-project-offers-bfi-emulation-in-any-game">Tom’s Hardware: ShaderBeam CRT-like motion clarity coverage</a></li>
+<li><a href="https://forums.blurbusters.com/viewtopic.php?t=177">Blur Busters forums: persistence and CRT phosphor timing discussion</a></li>
+<li><a href="https://www.hisense-usa.com/post/hisense-marks-new-era-of-display-innovation-with-its-first-consumer-microled-at-ces-2025">Hisense USA: 136MX MicroLED / CES 2025 display announcement</a></li>
+<li><a href="https://vesa.org/featured-articles/vesa-releases-displayport-2-1-specification/">VESA: DisplayPort 2.1 and UHBR20 / DP80 cable bandwidth</a></li>
+<li><a href="https://www.epa.gov/hw/cathode-ray-tubes-crts">EPA: Cathode-ray tubes and leaded CRT glass disposal/recycling</a></li>
+  </ol>
+</section>
+</main>
+</body>
+</html>
